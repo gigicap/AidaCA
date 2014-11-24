@@ -1,33 +1,52 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<root>
 <layers>
-	<layer ID="1">
-		<CellId="1092"/>
+	<layer
+		LayerID = "1"
+		CellID = "1092"
+		>
 	</layer>
-	<layer ID="2">
-		<CellId="1093"/>
+	<layer
+		LayerID = "2"
+		CellID = "1093"
+		>
 	</layer>
-	<layer ID="3">
-		<CellId="1094"/>
+	<layer
+		LayerID = "3"
+		CellID = "1094"
+		>
 	</layer>
-	<layer ID="4">
-		<CellId="1095"/>
+	<layer
+		LayerID = "4"
+		CellID = "1595"
+		>
+	</layer>	
+	<layer
+		LayerID = "5"
+		CellID = "1796"
+		>
 	</layer>
-	<layer ID="5">
-		<CellId="1096"/>
-	</layer>
-</layers>
-
 <laylists>
-	<laylist ID="321">	
-		<lay1="1", lay2="2", lay3="3"/>	
-		<left ="0"/>
+	<laylist
+		ListID = "321"	
+		lay1ID = "1"
+		lay2ID = "2"
+		lay3ID = "3"
+		left = "0">
 	</laylist>
-	<laylist ID="432">	
-		<lay1="2", lay2="3", lay3="4"/>
-		<left ="321"/>
+	<laylist
+		ListID = "432"	
+		lay1ID = "1"
+		lay2ID = "3"
+		lay3ID = "4"
+		left = "321">
 	</laylist>
-	<laylist ID="543">	
-		<lay1="3", lay2="4", lay3="5"/>
-		<left ="543"/>
+	<laylist
+		ListID = "543"	
+		lay1ID = "3"
+		lay2ID = "4"
+		lay3ID = "5"
+		left = "432">
 	</laylist>
 </laylists>
+</root>
