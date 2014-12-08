@@ -44,7 +44,10 @@
 //CA includes
 #include "LayersMap.h"
 #include "CACell.h"
-#include "HitSet.h"
+
+
+//HitSet  Definition
+typedef std::vector<SimTrackerHit> HitSet;
 
 //
 // CAHitsGenerator class declaration
@@ -76,7 +79,7 @@ public:
     std::vector<CAcell *> ListIntersect(std::list<CAcell *>, std::list<CAcell *>);
 
 	//Delta eta
-	double DeltaEta(GlobalPoint, GlobalPoint);
+	double DeltaEta(Vector3D, Vector3D);
 	//avoid duplicates
 	int IsAtLeft(int identif);
 
@@ -85,9 +88,8 @@ public:
 
 private:
     
-        //Debug switch (set in the _cfi  ==0 no debud output, ==1 text output, ==2 text+debug tree, ==3 +time measurements)
+        //Debug switch ( ==0 no debud output, ==1 text output, ==2 text+debug tree, ==3 +time measurements)
         int m_debug;
-        bool m_tree;
  	
         //CAcell collection
         std::vector<CAcell> tripletCollection;

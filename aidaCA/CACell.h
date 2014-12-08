@@ -25,6 +25,7 @@ public:
 	bool FitSuccessful;
 
 	double LocalMomentum;
+    aidaTT::trackParameters tripTP
 
 	int eventNumber;
     
@@ -35,13 +36,13 @@ public:
 	int hitId1;
 	int hitId2;
 
-    GlobalPoint p0 ,p1, p2;
+    Vector3D p0 ,p1, p2;
     
     double dEta;
     
-    unsigned int rawId0;
-    unsigned int rawId1;
-    unsigned int rawId2;
+    long64 rawId0;
+    long64 rawId1;
+    long64 rawId2;
     
     //neighborMAP
     std::vector<CAcell *> left_neighbors;       //list of the cells sharing hits 0-1 with the cell
@@ -57,8 +58,6 @@ public:
     //for the backwardCA
     int IsUsed;
     
-    //for fitting
-    PTrajectoryStateOnDet seedStartState;
     
     CAcell(){
         TripletNumber = 0;

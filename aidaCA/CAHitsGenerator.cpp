@@ -10,11 +10,10 @@
 using namespace std;
 using namespace lcio;
 
-CAHitsGenerator::CAHitsGenerator(int debug, bool maketrees, double EtaCut, LayersMap LayMap) 
+CAHitsGenerator::CAHitsGenerator(int debug, double EtaCut, LayersMap LayMap)
     {
 
      m_debug = debug;
-     m_tree = maketrees;		//to be re-implemented. Up to now, this flag has no effects
      dEta_cut = EtaCut;
      
         	
@@ -70,7 +69,7 @@ void CAHitsGenerator::hitSets(std::vector<HitSet> resultCA)
     if (m_debug > 1)  std::cout<<"Generating triplets"<<std::endl;
     
     //SLICE OF CODE FOR TRIPLET PRODUCTION HERE...
-	/*																								*/
+	/*	scoll = aidaTT::TripletProducer()						*/
 	//    ----!!
     
     tripletCollection.reserve(scoll->size());
@@ -152,7 +151,7 @@ for (size_t it = 0; it<tripletCollection.size(); it++) {
     //fit only the triplets with neighbors
     if (tripletCollection[it].IsNeighborly != 0) {
         ncont++;
-    // fast helix fitter
+    //fitter
         fitTripletSeeds(&tripletCollection[it], bfield, &geom);
  	//store the neighborly and fitted triplets
     	if (tripletCollection[it].FitSuccessful) {
@@ -179,15 +178,13 @@ for (size_t it = 0; it<tripletCollection.size(); it++) {
 int nSeeds = 0;
 
 for(size_t im = 0; im < multiplets.size(); im++){
-	//std::vector<TransientTrackingRecHit::ConstRecHitPointer> multiHitPointer;
-    std::vector<ConstRecHitPointer>  multiHitPointer;
+    HitSet  multiHitPointer;
 	for(size_t ii = 0; ii < multiplets[im].size(); ii++)
 		multiHitPointer.push_back(multiplets[im][ii]);
 	if(multiHitPointer.size()!=5)
 		std::cout<<"WARNING: multiset size = "<<multiHitPointer.size()<<std::endl;
 	else{
-    		SeedingHitSet multiset(multiHitPointer[4], multiHitPointer[3], multiHitPointer[2], multiHitPointer[1], multiHitPointer[0]);
-			resultCA.push_back(multiset);
+			resultCA.push_back(multiHitPointer);
 			nSeeds++;
 	}
 }
@@ -232,13 +229,26 @@ void CAHitsGenerator::CAcellGenerator(HitSet sset,  int seednumber){
       trip.rawId1 = sset[1]->getCellID0();
       trip.rawId2 = sset[2]->getCellID0();
 
-     // setting global points
-	//How do i implement the global position in aidaTT ? 
-    trip.p0 = sset[0]->globalPosition();			//(x,y,z) absolute coordinates
-    trip.p1 = sset[1]->globalPosition();
-    trip.p2 = sset[2]->globalPosition();
+    // setting global points
+    const aidaTT::ISurface* surf0 = surfMap[ rawId0 ] ;
+    const aidaTT::ISurface* surf1 = surfMap[ rawId1 ] ;
+    const aidaTT::ISurface* surf2 = surfMap[ rawId2 ] ;
     
-    trip.dEta = DeltaEta(p0,p2);			//to be rewritten as consequence
+    trip.hitId0 = surf0->id();
+    trip.hitId1 = surf1->id();
+    trip.hitId2 = surf2->id();
+    
+    Vector2D loc0 = sset[0]->getPosition();
+    Vector2D loc1 = sset[0]->getPosition();
+    Vector2D loc2 = sset[0]->getPosition();
+    
+    trip.p0 = surf0->localToGlobal(loc0);   //(x,y,z) global coordinates
+    trip.p1 = surf1->localToGlobal(loc1);
+    trip.p2 = surf2->localToGlobal(loc2);
+
+    
+    
+    trip.dEta = DeltaEta(p0,p2);
     
     // setting triplets IDs
     trip.eventNumber = eventcounter;
@@ -280,7 +290,7 @@ for(int i = 0 ; i < nHit ; ++i)
           {
            SimTrackerHit* sHit = &Hits[i] ;
            long64 id = sHit->getCellID0() ;
-           idDecoder.setValue(id) ;					//idDecoder to be set at init stage
+           idDecoder.setValue(id) ;
            double recalcPos[3] = {0., 0., 0.}; 
            const aidaTT::ISurface* surf = surfMap[ id ] ;
            if(surf->type().isSensitive())
@@ -290,15 +300,17 @@ for(int i = 0 ; i < nHit ; ++i)
                         precisionDummy.push_back(1. / 0.0012);
                         for(unsigned int i = 0; i < 3; ++i)
                              recalcPos[i] = sHit->getPosition()[i] * dd4hep::mm;
-                                    theTripTraj.addMeasurement(recalcPos, precisionDummy, *surf, sHit);
-                                }
-                        }
+                      
+                        theTripTraj.addMeasurement(recalcPos, precisionDummy, *surf, sHit);
+                    }
+            }
 //whatelse? 
 theTripTraj.prepareForFitting();
-theTripTraj.fit();			//fitta la traiettoria 
+theTripTraj.fit();
 
 const aidaTT::fitResults& result = theMaster.getFitResults();
-trip->LocalMomentum = result.estimatedParameters()(0); //where is the pt?
+    trip->trip_tp = tripTP;
+trip->LocalMomentum = result.estimatedParameters()(0); //q/p
 
 
 return;
@@ -450,9 +462,9 @@ std::vector<CAcell *> CAHitsGenerator::ListIntersect(std::list<CAcell *> list_h1
 }
 
 
-double CAHitsGenerator::DeltaEta(GlobalPoint p1, GlobalPoint p2){
+double CAHitsGenerator::DeltaEta(Vector3D p1, Vector3D p2){
     //maybe it has to be redefined... 
-    GlobalVector gV(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
+    Vector3D gV(p2.x()-p1.x(),p2.y()-p1.y(),p2.z()-p1.z());
     double eta = gV.eta();
     
     return eta;
@@ -460,7 +472,6 @@ double CAHitsGenerator::DeltaEta(GlobalPoint p1, GlobalPoint p2){
 
 
 //check is two triplets can be left-right joined 
-//NB: It should be changed anlytime the Layer configuration is changed (This works for A-B-C-D)
 int CAHitsGenerator::IsAtLeft(int identif){
 //to be moved in 	theLayerMap
 	std::vector<std::pair<int, int>> leftlist = theLayersMap.LeftList();
@@ -474,7 +485,4 @@ int CAHitsGenerator::IsAtLeft(int identif){
 	int ret_val = leftlist[i].second();
 	return ret_val;
 }
-
-
-//that's all folks!!!
 
